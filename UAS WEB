@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Perpustakaan - UAS Web</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 p-6 font-sans">
+        <h1 class="text-2xl font-bold mb-4">📚 Perpustakaan Kecil Kampus - UAS</h1>
+
+        <!-- STATISTIK -->
+        <div class="grid grid-cols-4 gap-3 mb-6">
+            <div class="bg-white p-4 rounded shadow text-center">
+                <b id="sBuku">0</b><br>
+                <span class="text-xs">Buku</span></div>
+            <div class="bg-white p-4 rounded shadow text-center">
+                <b id="sPinjam">0</b><br>
+                <span class="text-xs">Dipinjam</span></div>
+            <div class="bg-white p-4 rounded shadow text-center">
+                <b id="sOrang">0</b><br>
+                <span class="text-xs">Peminjam</span></div>
+            <div class="bg-white p-4 rounded shadow text-center">
+                <b id="sKembali">0</b><br>
+                <span class="text-xs">Kembali</span></div>
+        </div>
+
+        <!-- INPUT BUKU -->
+        <div class="bg-white p-4 rounded shadow mb-4">
+            <h2 class="font-bold mb-2">Tambah Buku (CRUD Buku)</h2>
+            <input id="jdl" placeholder="Judul Buku" class="border p-2 rounded w-full mb-2">
+            <input id="pnl" placeholder="Penulis" class="border p-2 rounded w-full mb-2">
+            <input
+                id="stk"
+                type="number"
+                placeholder="Stok"
+                class="border p-2 rounded w-full mb-2">
+            <button onclick="addBuku()" class="bg-blue-600 text-white px-4 py-2 rounded">Simpan Buku</button>
+            <br><br>
+            <input
+                id="cari"
+                onkeyup="tampilBuku()"
+                placeholder="Cari Judul Buku..."
+                class="border p-2 rounded w-full">
+            <table class="w-full mt-3 text-sm">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2">Judul</th>
+                        <th>Stok</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tbBuku"></tbody>
+            </table>
+        </div>
+
+        <!-- INPUT PEMINJAM -->
+        <div class="bg-white p-4 rounded shadow mb-4">
+            <h2 class="font-bold mb-2">Tambah Peminjam (CRUD Peminjam)</h2>
+            <input
+                id="nm"
+                placeholder="Nama Peminjam"
+                class="border p-2 rounded w-full mb-2">
+            <input id="nim" placeholder="NIM" class="border p-2 rounded w-full mb-2">
+            <button
+                onclick="addPeminjam()"
+                class="bg-green-600 text-white px-4 py-2 rounded">Simpan Peminjam</button>
+            <table class="w-full mt-3 text-sm">
+                <tbody id="tbPeminjam"></tbody>
+            </table>
+        </div>
+
+        <!-- PEMINJAMAN -->
+        <div class="bg-white p-4 rounded shadow">
+            <h2 class="font-bold mb-2">Transaksi Peminjaman & Pengembalian</h2>
+            <select id="selPeminjam" class="border p-2 rounded w-full mb-2"></select>
+            <select id="selBuku" class="border p-2 rounded w-full mb-2"></select>
+            <button onclick="pinjam()" class="bg-black text-white px-4 py-2 rounded w-full">Pinjam Buku</button>
+            <table class="w-full mt-4 text-sm">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2">Peminjam</th>
+                        <th>Buku</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tbPinjam"></tbody>
+            </table>
+        </div>
+
+        <script>
+            let buku=JSON.parse(localStorage.getItem('buku')||'[{"id":1,"jdl":"Pemrograman Web","pnl":"Pak Sahrial","stk":5}]');
+let org=JSON.parse(localStorage.getItem('org')||'[{"id":1,"nm":"Irfan","nim":"20230101"}]');
+let pinjamData=JSON.parse(localStorage.getItem('pinjam')||'[]');
+function save(){localStorage.setItem('buku',JSON.stringify(buku));localStorage.setItem('org',JSON.stringify(org));localStorage.setItem('pinjam',JSON.stringify(pinjamData));tampilSemua();}
+function tampilBuku(){let c=document.getElementById('cari').value.toLowerCase();let tb=document.getElementById('tbBuku');tb.innerHTML='';buku.filter(b=>b.jdl.toLowerCase().includes(c)).forEach(b=>{tb.innerHTML+=`<tr class="border-t"><td class="p-2">${b.jdl} - ${b.pnl}</td><td>${b.stk}</td><td><button onclick="hapusBuku(${b.id})" class="text-red-600">Hapus</button></td></tr>`});}
+function tampilPeminjam(){let tb=document.getElementById('tbPeminjam');tb.innerHTML='';let s1=document.getElementById('selPeminjam');s1.innerHTML='';org.forEach(o=>{tb.innerHTML+=`<tr class="border-t"><td class="p-2">${o.nm} (${o.nim})</td><td><button onclick="hapusOrg(${o.id})" class="text-red-600">Hapus</button></td></tr>`;s1.innerHTML+=`<option value="${o.id}">${o.nm}</option>`});let s2=document.getElementById('selBuku');s2.innerHTML='';buku.filter(b=>b.stk>0).forEach(b=>{s2.innerHTML+=`<option value="${b.id}">${b.jdl} - sisa ${b.stk}</option>`});}
+function tampilPinjam(){let tb=document.getElementById('tbPinjam');tb.innerHTML='';pinjamData.forEach(p=>{let n=org.find(o=>o.id==p.orgId)?.nm||'?';let j=buku.find(b=>b.id==p.bukuId)?.jdl||'?';tb.innerHTML+=`<tr class="border-t"><td class="p-2">${n}</td><td>${j}</td><td>${p.st}>Dipinjam</td><td>${p.st=='Dipinjam'?`<button onclick="kembali(${p.id})" class="bg-green-600 text-white px-2 py-1 rounded">Kembalikan</button>`:'Selesai'}</td></tr>`});document.getElementById('sBuku').innerText=buku.length;document.getElementById('sOrang').innerText=org.length;document.getElementById('sPinjam').innerText=pinjamData.filter(p=>p.st=='Dipinjam').length;document.getElementById('sKembali').innerText=pinjamData.filter(p=>p.st=='Kembali').length;}
+function tampilSemua(){tampilBuku();tampilPeminjam();tampilPinjam();}
+function addBuku(){let j=document.getElementById('jdl').value,p=document.getElementById('pnl').value,s=parseInt(document.getElementById('stk').value);if(!j)return alert('isi judul');buku.push({id:Date.now(),jdl:j,pnl:p,stk:s});save();document.getElementById('jdl').value='';}
+function addPeminjam(){let n=document.getElementById('nm').value,m=document.getElementById('nim').value;if(!n)return alert('isi nama');org.push({id:Date.now(),nm:n,nim:m});save();}
+function pinjam(){let o=parseInt(document.getElementById('selPeminjam').value),b=parseInt(document.getElementById('selBuku').value);let bk=buku.find(x=>x.id==b);if(!bk||bk.stk<=0)return alert('stok habis');bk.stk--;pinjamData.push({id:Date.now(),orgId:o,bukuId:b,st:'Dipinjam'});save();}
+function kembali(id){let p=pinjamData.find(x=>x.id==id);p.st='Kembali';let bk=buku.find(x=>x.id==p.bukuId);bk.stk++;save();}
+function hapusBuku(id){buku=buku.filter(b=>b.id!=id);save();}
+function hapusOrg(id){org=org.filter(b=>b.id!=id);save();}
+tampilSemua();
+</script>
+</body>
+</html>
